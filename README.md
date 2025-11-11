@@ -1,7 +1,7 @@
 # Shareley
 Cloth sharing app
 
-# Shareley - MZ Clothing Website
+# Shareley 
 
 A modern, responsive clothing website built with React, TypeScript, Vite, and Tailwind CSS.
 
