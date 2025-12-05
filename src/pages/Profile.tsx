@@ -3,18 +3,26 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useListings } from '../context/ListingsContext';
 import ListingCard from '../components/ListingCard';
-import { Shirt, ArrowLeft, Plus, LogOut, User } from 'lucide-react';
+import { Shirt, ArrowLeft, Plus, LogOut, User, Trash2, DollarSign } from 'lucide-react';
 
 const Profile: React.FC = () => {
-  const { user, logout, isAuthenticated } = useAuth();
-  const { getUserListings } = useListings();
+  const { user, logout, isAuthenticated, loading: authLoading } = useAuth();
+  const { getUserListings, deleteListing, updateListing, loading: listingsLoading } = useListings();
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
+
+  if (authLoading || listingsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-cyan-50">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500"></div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !user) {
     return null;
@@ -31,43 +39,6 @@ const Profile: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-cyan-50">
-      {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/marketplace')}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <Link to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                  <Shirt className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gray-900">Shareley</span>
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                to="/marketplace"
-                className="text-gray-600 hover:text-pink-500 transition-colors font-medium"
-              >
-                Marketplace
-              </Link>
-              <Link
-                to="/add-listing"
-                className="bg-pink-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-pink-600 transition-colors inline-flex items-center"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Listing
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Header */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
@@ -143,7 +114,29 @@ const Profile: React.FC = () => {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {activeListings.map(listing => (
-                <ListingCard key={listing.id} listing={listing} />
+                <div key={listing.id} className="relative group">
+                  <ListingCard listing={listing} />
+                  <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => updateListing(listing.id, { status: 'sold' })}
+                      className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 shadow-lg"
+                      title="Mark as Sold"
+                    >
+                      <DollarSign className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this listing?')) {
+                          deleteListing(listing.id);
+                        }
+                      }}
+                      className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
+                      title="Delete Listing"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -155,7 +148,29 @@ const Profile: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Completed Listings</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {soldListings.map(listing => (
-                <ListingCard key={listing.id} listing={listing} />
+                <div key={listing.id} className="relative group">
+                  <ListingCard listing={listing} />
+                  <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => updateListing(listing.id, { status: 'active' })}
+                      className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow-lg"
+                      title="Mark as Active"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this listing?')) {
+                          deleteListing(listing.id);
+                        }
+                      }}
+                      className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
+                      title="Delete Listing"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           </div>

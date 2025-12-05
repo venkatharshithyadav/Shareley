@@ -18,16 +18,22 @@ interface ListingsProviderProps {
 
 export const ListingsProvider: React.FC<ListingsProviderProps> = ({ children }) => {
   const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchListings = async () => {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('listings')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching listings:', error.message);
-      } else {
+        if (error) {
+          throw error;
+        }
+
         // Map Supabase data to our Listing type
         const mappedListings: Listing[] = data.map((item: any) => ({
           id: item.id,
@@ -46,92 +52,111 @@ export const ListingsProvider: React.FC<ListingsProviderProps> = ({ children }) 
           status: item.status,
         }));
         setListings(mappedListings);
+      } catch (err: any) {
+        console.error('Error fetching listings:', err.message);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
     fetchListings();
   }, []);
 
   const addListing = async (listing: Omit<Listing, 'id' | 'createdAt'>) => {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return;
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('User not authenticated');
 
-    const newListing = {
-      user_id: userData.user.id,
-      user_name: listing.userName,
-      title: listing.title,
-      description: listing.description,
-      price: listing.price,
-      type: listing.type,
-      category: listing.category,
-      size: listing.size,
-      condition: listing.condition,
-      images: listing.images,
-      location: listing.location,
-      status: 'active',
-    };
-
-    const { data, error } = await supabase
-      .from('listings')
-      .insert([newListing])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error adding listing:', error.message);
-    } else if (data) {
-      const mappedListing: Listing = {
-        id: data.id,
-        userId: data.user_id,
-        userName: data.user_name,
-        title: data.title,
-        description: data.description,
-        price: data.price,
-        type: data.type,
-        category: data.category,
-        size: data.size,
-        condition: data.condition,
-        images: data.images,
-        location: data.location,
-        createdAt: data.created_at,
-        status: data.status,
+      const newListing = {
+        user_id: userData.user.id,
+        user_name: listing.userName,
+        title: listing.title,
+        description: listing.description,
+        price: listing.price,
+        type: listing.type,
+        category: listing.category,
+        size: listing.size,
+        condition: listing.condition,
+        images: listing.images,
+        location: listing.location,
+        status: 'active',
       };
-      setListings([mappedListing, ...listings]);
+
+      const { data, error } = await supabase
+        .from('listings')
+        .insert([newListing])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const mappedListing: Listing = {
+          id: data.id,
+          userId: data.user_id,
+          userName: data.user_name,
+          title: data.title,
+          description: data.description,
+          price: data.price,
+          type: data.type,
+          category: data.category,
+          size: data.size,
+          condition: data.condition,
+          images: data.images,
+          location: data.location,
+          createdAt: data.created_at,
+          status: data.status,
+        };
+        setListings([mappedListing, ...listings]);
+      }
+    } catch (err: any) {
+      console.error('Error adding listing:', err.message);
+      throw err;
     }
   };
 
   const updateListing = async (id: string, updates: Partial<Listing>) => {
-    // Convert camelCase to snake_case for Supabase
-    const supabaseUpdates: any = {};
-    if (updates.title) supabaseUpdates.title = updates.title;
-    if (updates.description) supabaseUpdates.description = updates.description;
-    if (updates.price) supabaseUpdates.price = updates.price;
-    // ... add other fields as needed
+    try {
+      // Convert camelCase to snake_case for Supabase
+      const supabaseUpdates: any = {};
+      if (updates.title) supabaseUpdates.title = updates.title;
+      if (updates.description) supabaseUpdates.description = updates.description;
+      if (updates.price) supabaseUpdates.price = updates.price;
+      if (updates.status) supabaseUpdates.status = updates.status;
+      // ... add other fields as needed
 
-    const { data, error } = await supabase
-      .from('listings')
-      .update(supabaseUpdates)
-      .eq('id', id)
-      .select()
-      .single();
+      const { data, error } = await supabase
+        .from('listings')
+        .update(supabaseUpdates)
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error updating listing:', error.message);
-    } else if (data) {
-      // Update local state
-      setListings(listings.map(l => l.id === id ? { ...l, ...updates } : l));
+      if (error) throw error;
+
+      if (data) {
+        // Update local state
+        setListings(listings.map(l => l.id === id ? { ...l, ...updates } : l));
+      }
+    } catch (err: any) {
+      console.error('Error updating listing:', err.message);
+      throw err;
     }
   };
 
   const deleteListing = async (id: string) => {
-    const { error } = await supabase
-      .from('listings')
-      .delete()
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .delete()
+        .eq('id', id);
 
-    if (error) {
-      console.error('Error deleting listing:', error.message);
-    } else {
+      if (error) throw error;
+
       setListings(listings.filter(listing => listing.id !== id));
+    } catch (err: any) {
+      console.error('Error deleting listing:', err.message);
+      throw err;
     }
   };
 
@@ -147,6 +172,8 @@ export const ListingsProvider: React.FC<ListingsProviderProps> = ({ children }) 
     <ListingsContext.Provider
       value={{
         listings,
+        loading,
+        error,
         addListing,
         updateListing,
         deleteListing,

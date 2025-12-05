@@ -3,83 +3,47 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useListings } from '../context/ListingsContext';
 import ListingCard from '../components/ListingCard';
+import HeroSearch from '../components/HeroSearch';
 import { Shirt, ArrowRight, Users, Heart, TrendingUp } from 'lucide-react';
 
 const Home: React.FC = () => {
   const { isAuthenticated } = useAuth();
-  const { listings } = useListings();
+  const { listings, loading } = useListings();
   const recentListings = listings.filter(l => l.status === 'active').slice(0, 6);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-cyan-50">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-cyan-50">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <Shirt className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">Shareley</span>
-            </Link>
-            <div className="hidden md:flex items-center space-x-8">
-              <Link to="/marketplace" className="text-gray-600 hover:text-pink-500 transition-colors">
-                Marketplace
-              </Link>
-              {isAuthenticated ? (
-                <>
-                  <Link to="/add-listing" className="text-gray-600 hover:text-pink-500 transition-colors">
-                    Add Listing
-                  </Link>
-                  <Link to="/profile" className="text-gray-600 hover:text-pink-500 transition-colors">
-                    Profile
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className="text-gray-600 hover:text-pink-500 transition-colors">
-                    Login
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="bg-pink-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none opacity-30">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+          <div className="absolute top-20 right-10 w-72 h-72 bg-cyan-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center">
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
-              Buy, Sell, Lend & Rent Clothes
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 tracking-tight">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-cyan-600">
+                AI-Powered
+              </span>{' '}
+              Fashion
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Join Shareley to discover sustainable fashion, connect with your community, and give clothes a second life.
+            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
+              The world's first voice-assisted marketplace. Just say what you're looking for.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link
-                to="/marketplace"
-                className="bg-pink-500 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl inline-flex items-center"
-              >
-                Browse Marketplace
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-              {!isAuthenticated && (
-                <Link
-                  to="/signup"
-                  className="bg-cyan-500 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-cyan-600 transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  Get Started
-                </Link>
-              )}
-            </div>
+
+            <HeroSearch />
+
           </div>
         </div>
       </section>
@@ -221,85 +185,6 @@ const Home: React.FC = () => {
           )}
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                  <Shirt className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-2xl font-bold">Shareley</span>
-              </div>
-              <p className="text-gray-400">
-                Sustainable fashion marketplace for buying, selling, lending, and renting clothes.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Marketplace</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link to="/marketplace" className="hover:text-white transition-colors">
-                    Browse Listings
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/add-listing" className="hover:text-white transition-colors">
-                    Add Listing
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Account</h3>
-              <ul className="space-y-2 text-gray-400">
-                {isAuthenticated ? (
-                  <>
-                    <li>
-                      <Link to="/profile" className="hover:text-white transition-colors">
-                        Profile
-                      </Link>
-                    </li>
-                  </>
-                ) : (
-                  <>
-                    <li>
-                      <Link to="/login" className="hover:text-white transition-colors">
-                        Login
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="/signup" className="hover:text-white transition-colors">
-                        Sign Up
-                      </Link>
-                    </li>
-                  </>
-                )}
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">About</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    How It Works
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Shareley. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

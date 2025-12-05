@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useListings } from '../context/ListingsContext';
 import { useAuth } from '../context/AuthContext';
 import { ListingType } from '../types';
-import { Shirt, ArrowLeft } from 'lucide-react';
+import { Shirt, ArrowLeft, Upload, X } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const AddListing: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { addListing } = useListings();
   const navigate = useNavigate();
 
@@ -22,14 +23,66 @@ const AddListing: React.FC = () => {
     images: [] as string[],
   });
 
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   React.useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-cyan-50">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500"></div>
+      </div>
+    );
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      setError('');
+
+      if (!e.target.files || e.target.files.length === 0) {
+        throw new Error('You must select an image to upload.');
+      }
+
+      const file = e.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('listing-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage.from('listing-images').getPublicUrl(filePath);
+
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, data.publicUrl]
+      }));
+
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, index) => index !== indexToRemove)
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +102,7 @@ const AddListing: React.FC = () => {
         return;
       }
 
-      addListing({
+      await addListing({
         ...formData,
         userId: user.id,
         userName: user.name,
@@ -79,28 +132,6 @@ const AddListing: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-cyan-50">
-      {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate(-1)}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                  <Shirt className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gray-900">Shareley</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">Add New Listing</h1>
@@ -161,6 +192,40 @@ const AddListing: React.FC = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 placeholder="Describe your item..."
               />
+            </div>
+
+            {/* Image Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Photos
+              </label>
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                {formData.images.map((url, index) => (
+                  <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                    <img src={url} alt={`Listing ${index + 1}`} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-pink-500 hover:bg-pink-50 transition-colors">
+                  <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                  <span className="text-sm text-gray-500">
+                    {uploading ? 'Uploading...' : 'Upload Photo'}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -285,7 +350,7 @@ const AddListing: React.FC = () => {
               </button>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || uploading}
                 className="px-6 py-3 bg-pink-500 text-white rounded-lg font-semibold hover:bg-pink-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Creating...' : 'Create Listing'}

@@ -33,13 +33,16 @@ export interface AuthContextType {
   signup: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 export interface ListingsContextType {
   listings: Listing[];
-  addListing: (listing: Omit<Listing, 'id' | 'createdAt'>) => void;
-  updateListing: (id: string, updates: Partial<Listing>) => void;
-  deleteListing: (id: string) => void;
+  loading: boolean;
+  error: string | null;
+  addListing: (listing: Omit<Listing, 'id' | 'createdAt'>) => Promise<void>;
+  updateListing: (id: string, updates: Partial<Listing>) => Promise<void>;
+  deleteListing: (id: string) => Promise<void>;
   getListingById: (id: string) => Listing | undefined;
   getUserListings: (userId: string) => Listing[];
 }

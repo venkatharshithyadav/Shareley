@@ -59,35 +59,14 @@ const ListingDetail: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-cyan-50">
-      {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate(-1)}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <Link to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                  <Shirt className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gray-900">Shareley</span>
-              </Link>
-            </div>
-            <Link
-              to="/marketplace"
-              className="text-gray-600 hover:text-pink-500 transition-colors font-medium"
-            >
-              Marketplace
-            </Link>
-          </div>
-        </div>
-      </nav>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back
+        </button>
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
@@ -162,10 +141,13 @@ const ListingDetail: React.FC = () => {
 
               {/* Contact Button */}
               {!isOwner ? (
-                <button className="w-full bg-pink-500 text-white py-3 rounded-lg font-semibold hover:bg-pink-600 transition-colors mb-4 flex items-center justify-center">
+                <a
+                  href={`mailto:?subject=Regarding your listing: ${listing.title}&body=Hi ${listing.userName}, I'm interested in your listing on Shareley.`}
+                  className="w-full bg-pink-500 text-white py-3 rounded-lg font-semibold hover:bg-pink-600 transition-colors mb-4 flex items-center justify-center"
+                >
                   <Mail className="w-5 h-5 mr-2" />
                   Contact Seller
-                </button>
+                </a>
               ) : (
                 <div className="w-full bg-gray-100 text-gray-600 py-3 rounded-lg font-semibold text-center mb-4">
                   This is your listing

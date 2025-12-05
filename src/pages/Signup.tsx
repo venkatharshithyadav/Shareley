@@ -44,16 +44,10 @@ const Signup: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-cyan-50 flex items-center justify-center px-4">
+    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-gradient-to-br from-pink-50 to-cyan-50 px-4 py-12">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <Link to="/" className="inline-flex items-center space-x-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <Shirt className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-3xl font-bold text-gray-900">Shareley</span>
-            </Link>
             <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
             <p className="text-gray-600 mt-2">Join Shareley to buy, sell, lend, and rent clothes</p>
           </div>

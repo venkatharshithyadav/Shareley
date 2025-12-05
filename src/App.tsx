@@ -9,6 +9,7 @@ import Marketplace from './pages/Marketplace';
 import AddListing from './pages/AddListing';
 import Profile from './pages/Profile';
 import ListingDetail from './pages/ListingDetail';
+import Layout from './components/Layout';
 
 function App() {
   return (
@@ -16,13 +17,15 @@ function App() {
       <ListingsProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/add-listing" element={<AddListing />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/listing/:id" element={<ListingDetail />} />
+            <Route element={<Layout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/add-listing" element={<AddListing />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/listing/:id" element={<ListingDetail />} />
+            </Route>
           </Routes>
         </Router>
       </ListingsProvider>

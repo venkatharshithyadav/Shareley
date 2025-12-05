@@ -18,19 +18,29 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          name: session.user.user_metadata.name || session.user.email?.split('@')[0] || 'User',
-          email: session.user.email || '',
-          createdAt: session.user.created_at,
-        });
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            name: session.user.user_metadata.name || session.user.email?.split('@')[0] || 'User',
+            email: session.user.email || '',
+            createdAt: session.user.created_at,
+          });
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setLoading(false);
       }
-    });
+    };
+
+    checkSession();
 
     // Listen for auth changes
     const {
@@ -46,6 +56,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         setUser(null);
       }
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -94,6 +105,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         signup,
         logout,
         isAuthenticated: !!user,
+        loading,
       }}
     >
       {children}
