@@ -34,13 +34,23 @@ const Navbar: React.FC = () => {
 
                         {isAuthenticated ? (
                             <>
-                                <Link
-                                    to="/add-listing"
-                                    className={`text-sm font-medium transition-colors hover:text-pink-500 ${isActive('/add-listing') ? 'text-pink-500' : 'text-gray-600'
-                                        }`}
-                                >
-                                    Add Listing
-                                </Link>
+                                {user?.userType === 'company' ? (
+                                    <Link
+                                        to="/create-campaign"
+                                        className={`text-sm font-medium transition-colors hover:text-pink-500 ${isActive('/create-campaign') ? 'text-pink-500' : 'text-gray-600'
+                                            }`}
+                                    >
+                                        Create Campaign
+                                    </Link>
+                                ) : (
+                                    <Link
+                                        to="/add-listing"
+                                        className={`text-sm font-medium transition-colors hover:text-pink-500 ${isActive('/add-listing') ? 'text-pink-500' : 'text-gray-600'
+                                            }`}
+                                    >
+                                        Add Listing
+                                    </Link>
+                                )}
                                 <div className="relative group">
                                     <Link
                                         to="/profile"
@@ -101,13 +111,23 @@ const Navbar: React.FC = () => {
                         </Link>
                         {isAuthenticated ? (
                             <>
-                                <Link
-                                    to="/add-listing"
-                                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-pink-500 hover:bg-pink-50"
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    Add Listing
-                                </Link>
+                                {user?.userType === 'company' ? (
+                                    <Link
+                                        to="/create-campaign"
+                                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-pink-500 hover:bg-pink-50"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Create Campaign
+                                    </Link>
+                                ) : (
+                                    <Link
+                                        to="/add-listing"
+                                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-pink-500 hover:bg-pink-50"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Add Listing
+                                    </Link>
+                                )}
                                 <Link
                                     to="/profile"
                                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-pink-500 hover:bg-pink-50"

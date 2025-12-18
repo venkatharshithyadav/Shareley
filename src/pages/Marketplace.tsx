@@ -1,30 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useListings } from '../context/ListingsContext';
+import { useBrandCampaigns } from '../context/BrandCampaignsContext';
 import { useAuth } from '../context/AuthContext';
 import ListingCard from '../components/ListingCard';
+import BrandCampaignCard from '../components/BrandCampaignCard';
 import VoiceSearch from '../components/VoiceSearch';
-import { analyzeSearchIntent } from '../utils/aiSearch';
+import { analyzeSearchIntent, extractBrandFromQuery, isBrandQuery } from '../utils/aiSearch';
 import { ListingType, Listing } from '../types';
 import { Shirt, Filter, Plus, Sparkles, X } from 'lucide-react';
 
 const Marketplace: React.FC = () => {
   const { listings, loading } = useListings();
+  const { campaigns, getCampaignsByBrand, loading: campaignsLoading } = useBrandCampaigns();
   const { isAuthenticated } = useAuth();
   const [filterType, setFilterType] = useState<ListingType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [aiResults, setAiResults] = useState<Listing[] | null>(null);
   const [isAiActive, setIsAiActive] = useState(false);
+  const [showCampaigns, setShowCampaigns] = useState(false);
+  const [brandFilter, setBrandFilter] = useState<string | null>(null);
   const location = useLocation();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const query = params.get('q');
     const ai = params.get('ai');
+    const brand = params.get('brand');
+    const showCampaignsParam = params.get('campaigns');
+
+    if (brand) {
+      setBrandFilter(brand);
+      setShowCampaigns(true);
+    }
+
+    if (showCampaignsParam === 'true') {
+      setShowCampaigns(true);
+    }
 
     if (query && ai === 'true') {
       setSearchQuery(query);
+
+      // Check if it's a brand query
+      const detectedBrand = extractBrandFromQuery(query);
+      if (detectedBrand || isBrandQuery(query)) {
+        setShowCampaigns(true);
+        if (detectedBrand) {
+          setBrandFilter(detectedBrand);
+        }
+      }
+
       setIsAiActive(true);
       const results = analyzeSearchIntent(query, listings);
       setAiResults(results);
@@ -108,6 +134,37 @@ const Marketplace: React.FC = () => {
           )}
         </div>
       </section>
+
+      {/* Brand Campaigns Section */}
+      {showCampaigns && (
+        <section className="py-12 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                {brandFilter ? `${brandFilter} Campaigns` : 'Brand Campaigns'}
+              </h2>
+              <p className="text-gray-600">Exclusive deals from international brands</p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {(brandFilter ? getCampaignsByBrand(brandFilter) : campaigns).map(campaign => (
+                <BrandCampaignCard key={campaign.id} campaign={campaign} />
+              ))}
+            </div>
+            {brandFilter && (
+              <button
+                onClick={() => {
+                  setBrandFilter(null);
+                  setShowCampaigns(false);
+                }}
+                className="text-pink-500 hover:text-pink-600 font-semibold inline-flex items-center"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Clear brand filter
+              </button>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Filters */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

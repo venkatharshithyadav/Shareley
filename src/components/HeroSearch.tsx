@@ -69,54 +69,224 @@ const HeroSearch: React.FC = () => {
     };
 
     return (
-        <div className="relative w-full max-w-4xl mx-auto mt-8">
-            <div className="relative flex items-center justify-center">
-                {/* Wave Animation Background */}
-                <AnimatePresence>
-                    {isListening && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1.2 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
-                            className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                        >
-                            {[...Array(3)].map((_, i) => (
-                                <motion.div
-                                    key={i}
-                                    className="absolute rounded-full border-2 border-pink-400"
-                                    initial={{ width: '100%', height: '100%', opacity: 0.8 }}
-                                    animate={{
-                                        width: ['100%', '150%'],
-                                        height: ['100%', '250%'],
-                                        opacity: [0.8, 0],
-                                        borderRadius: ['50%', '40%', '60%', '50%'] // Wavy shape
-                                    }}
-                                    transition={{
-                                        duration: 2,
-                                        repeat: Infinity,
-                                        delay: i * 0.4,
-                                        ease: "easeOut"
-                                    }}
-                                    style={{
-                                        width: 80,
-                                        height: 80,
-                                    }}
-                                />
-                            ))}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+        <div className="relative w-full max-w-6xl mx-auto mt-12">
+            {/* Main Container with Waves */}
+            <div className="relative flex flex-col items-center justify-center">
 
-                {/* Main Search Bar Container */}
+                {/* Animated Wave Visualization - Always visible now */}
                 <motion.div
-                    className={`relative z-10 flex items-center w-full bg-white/90 backdrop-blur-xl rounded-full shadow-2xl border border-white/50 transition-all duration-300 ${isListening ? 'ring-4 ring-pink-200 scale-105' : 'hover:shadow-3xl'
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    style={{ width: '100%', height: '200px', top: '-60px' }}
+                >
+                    {/* SVG Wave Container */}
+                    <svg
+                        className="w-full h-full"
+                        viewBox="0 0 1200 200"
+                        preserveAspectRatio="none"
+                        style={{ overflow: 'visible' }}
+                    >
+                        {/* Wave 1 - Blue */}
+                        <motion.path
+                            d="M0,100 Q150,50 300,100 T600,100 T900,100 T1200,100"
+                            fill="none"
+                            stroke="url(#gradient1)"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            initial={{ pathLength: 1, opacity: 0.3 }}
+                            animate={isListening ? {
+                                opacity: [0.4, 0.8, 0.4],
+                                d: [
+                                    "M0,100 Q150,50 300,100 T600,100 T900,100 T1200,100",
+                                    "M0,100 Q150,150 300,100 T600,100 T900,100 T1200,100",
+                                    "M0,100 Q150,50 300,100 T600,100 T900,100 T1200,100"
+                                ]
+                            } : {
+                                opacity: 0.3,
+                                d: "M0,100 Q150,50 300,100 T600,100 T900,100 T1200,100"
+                            }}
+                            transition={isListening ? {
+                                opacity: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+                                d: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                            } : { duration: 0.5 }}
+                        />
+
+                        {/* Wave 2 - Cyan */}
+                        <motion.path
+                            d="M0,100 Q200,80 400,100 T800,100 T1200,100"
+                            fill="none"
+                            stroke="url(#gradient2)"
+                            strokeWidth="4"
+                            strokeLinecap="round"
+                            initial={{ pathLength: 1, opacity: 0.3 }}
+                            animate={isListening ? {
+                                opacity: [0.5, 0.9, 0.5],
+                                d: [
+                                    "M0,100 Q200,80 400,100 T800,100 T1200,100",
+                                    "M0,100 Q200,120 400,100 T800,100 T1200,100",
+                                    "M0,100 Q200,80 400,100 T800,100 T1200,100"
+                                ]
+                            } : {
+                                opacity: 0.3,
+                                d: "M0,100 Q200,80 400,100 T800,100 T1200,100"
+                            }}
+                            transition={isListening ? {
+                                opacity: { duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
+                                d: { duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 0.2 }
+                            } : { duration: 0.5 }}
+                        />
+
+                        {/* Wave 3 - Green */}
+                        <motion.path
+                            d="M0,100 Q100,70 200,100 T400,100 T600,100 T800,100 T1000,100 T1200,100"
+                            fill="none"
+                            stroke="url(#gradient3)"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            initial={{ pathLength: 1, opacity: 0.2 }}
+                            animate={isListening ? {
+                                opacity: [0.3, 0.7, 0.3],
+                                d: [
+                                    "M0,100 Q100,70 200,100 T400,100 T600,100 T800,100 T1000,100 T1200,100",
+                                    "M0,100 Q100,130 200,100 T400,100 T600,100 T800,100 T1000,100 T1200,100",
+                                    "M0,100 Q100,70 200,100 T400,100 T600,100 T800,100 T1000,100 T1200,100"
+                                ]
+                            } : {
+                                opacity: 0.2,
+                                d: "M0,100 Q100,70 200,100 T400,100 T600,100 T800,100 T1000,100 T1200,100"
+                            }}
+                            transition={isListening ? {
+                                opacity: { duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.4 },
+                                d: { duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.4 }
+                            } : { duration: 0.5 }}
+                        />
+
+                        {/* Wave 4 - Purple/Pink */}
+                        <motion.path
+                            d="M0,100 Q250,60 500,100 T1000,100 T1200,100"
+                            fill="none"
+                            stroke="url(#gradient4)"
+                            strokeWidth="3.5"
+                            strokeLinecap="round"
+                            initial={{ pathLength: 1, opacity: 0.25 }}
+                            animate={isListening ? {
+                                opacity: [0.4, 0.75, 0.4],
+                                d: [
+                                    "M0,100 Q250,60 500,100 T1000,100 T1200,100",
+                                    "M0,100 Q250,140 500,100 T1000,100 T1200,100",
+                                    "M0,100 Q250,60 500,100 T1000,100 T1200,100"
+                                ]
+                            } : {
+                                opacity: 0.25,
+                                d: "M0,100 Q250,60 500,100 T1000,100 T1200,100"
+                            }}
+                            transition={isListening ? {
+                                opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 },
+                                d: { duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }
+                            } : { duration: 0.5 }}
+                        />
+
+                        {/* Gradient Definitions */}
+                        <defs>
+                            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+                                <stop offset="50%" stopColor="#06b6d4" stopOpacity="1" />
+                                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
+                            </linearGradient>
+                            <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.9" />
+                                <stop offset="50%" stopColor="#0891b2" stopOpacity="1" />
+                                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.9" />
+                            </linearGradient>
+                            <linearGradient id="gradient3" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#10b981" stopOpacity="0.7" />
+                                <stop offset="50%" stopColor="#34d399" stopOpacity="1" />
+                                <stop offset="100%" stopColor="#10b981" stopOpacity="0.7" />
+                            </linearGradient>
+                            <linearGradient id="gradient4" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.8" />
+                                <stop offset="50%" stopColor="#a78bfa" stopOpacity="1" />
+                                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.8" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </motion.div>
+
+                {/* Microphone Button - Center Stage */}
+                <motion.div
+                    className="relative z-20 mb-8"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <motion.button
+                        onClick={startListening}
+                        className={`relative flex items-center justify-center rounded-full transition-all duration-500 ${isListening
+                            ? 'w-32 h-32 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 shadow-2xl'
+                            : 'w-24 h-24 bg-gradient-to-br from-pink-500 via-purple-500 to-cyan-500 shadow-xl hover:shadow-2xl'
+                            }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        animate={isListening ? {
+                            boxShadow: [
+                                '0 0 0 0 rgba(59, 130, 246, 0.7)',
+                                '0 0 0 20px rgba(59, 130, 246, 0)',
+                                '0 0 0 0 rgba(59, 130, 246, 0)'
+                            ]
+                        } : {}}
+                        transition={isListening ? {
+                            boxShadow: {
+                                duration: 1.5,
+                                repeat: Infinity,
+                                ease: "easeOut"
+                            }
+                        } : {}}
+                    >
+                        {/* Inner glow */}
+                        <div className="absolute inset-2 rounded-full bg-white/20 backdrop-blur-sm" />
+
+                        {/* Mic Icon */}
+                        <Mic className={`relative z-10 text-white ${isListening ? 'w-14 h-14' : 'w-10 h-10'} transition-all duration-300`} />
+
+                        {/* Pulsing ring when not listening */}
+                        {!isListening && (
+                            <motion.div
+                                className="absolute inset-0 rounded-full border-4 border-white/30"
+                                animate={{
+                                    scale: [1, 1.2, 1],
+                                    opacity: [0.5, 0, 0.5]
+                                }}
+                                transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                            />
+                        )}
+                    </motion.button>
+
+                    {/* Status Text */}
+                    <motion.p
+                        className="text-center mt-4 font-semibold"
+                        animate={{
+                            color: isListening ? '#3b82f6' : '#6b7280'
+                        }}
+                    >
+                        {isListening ? 'Listening...' : 'Tap to speak'}
+                    </motion.p>
+                </motion.div>
+
+                {/* Search Bar */}
+                <motion.div
+                    className={`relative z-10 flex items-center w-full bg-white/90 backdrop-blur-xl rounded-full shadow-2xl border border-white/50 transition-all duration-300 ${isListening ? 'ring-4 ring-blue-200/50' : 'hover:shadow-3xl'
                         }`}
                     style={{
-                        height: '80px',
-                        borderRadius: '50px', // Pill shape
+                        height: '56px',
+                        borderRadius: '50px',
                     }}
                 >
-                    {/* Text Input (Left) */}
+                    {/* Text Input */}
                     <input
                         ref={inputRef}
                         type="text"
@@ -124,40 +294,16 @@ const HeroSearch: React.FC = () => {
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder={isListening ? "Listening..." : "Ask AI: 'I need a halloween outfit'..."}
-                        className="flex-grow h-full bg-transparent px-8 text-xl text-gray-800 placeholder-gray-400 focus:outline-none rounded-l-full"
+                        className="flex-grow h-full bg-transparent px-6 text-lg text-gray-800 placeholder-gray-400 focus:outline-none rounded-l-full"
                         disabled={isListening}
                     />
 
-                    {/* Central/Right Big Mic Button */}
-                    <div className="relative flex items-center justify-center pr-2">
-                        <motion.button
-                            onClick={startListening}
-                            className={`relative flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300 ${isListening
-                                    ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg'
-                                    : 'bg-gradient-to-r from-pink-500 to-cyan-500 text-white shadow-md hover:shadow-lg hover:scale-110'
-                                }`}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            {isListening ? (
-                                <Mic className="w-8 h-8 animate-pulse" />
-                            ) : (
-                                <Mic className="w-8 h-8" />
-                            )}
-
-                            {/* Glow effect */}
-                            {!isListening && (
-                                <div className="absolute inset-0 rounded-full bg-white opacity-20 animate-ping" />
-                            )}
-                        </motion.button>
-                    </div>
-
-                    {/* Search Icon (Far Right) */}
+                    {/* Search Button */}
                     <button
                         onClick={() => handleSearch(query)}
-                        className="h-full px-6 text-gray-400 hover:text-pink-500 transition-colors rounded-r-full"
+                        className="h-full px-6 text-gray-400 hover:text-pink-500 transition-colors rounded-r-full group"
                     >
-                        <Search className="w-6 h-6" />
+                        <Search className="w-5 h-5 group-hover:scale-110 transition-transform" />
                     </button>
                 </motion.div>
             </div>
@@ -167,7 +313,7 @@ const HeroSearch: React.FC = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="text-center mt-4 text-gray-500 text-sm font-medium flex items-center justify-center gap-2"
+                className="text-center mt-6 text-gray-500 text-sm font-medium flex items-center justify-center gap-2"
             >
                 <Sparkles className="w-4 h-4 text-pink-500" />
                 Try saying: "Show me red dresses for a wedding"

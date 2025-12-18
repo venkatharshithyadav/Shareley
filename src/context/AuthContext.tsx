@@ -31,6 +31,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             name: session.user.user_metadata.name || session.user.email?.split('@')[0] || 'User',
             email: session.user.email || '',
             createdAt: session.user.created_at,
+            userType: session.user.user_metadata.user_type || 'individual',
+            companyName: session.user.user_metadata.company_name,
+            isVerifiedBrand: session.user.user_metadata.is_verified_brand || false,
+            avatar: session.user.user_metadata.avatar,
           });
         }
       } catch (error) {
@@ -52,6 +56,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           name: session.user.user_metadata.name || session.user.email?.split('@')[0] || 'User',
           email: session.user.email || '',
           createdAt: session.user.created_at,
+          userType: session.user.user_metadata.user_type || 'individual',
+          companyName: session.user.user_metadata.company_name,
+          isVerifiedBrand: session.user.user_metadata.is_verified_brand || false,
+          avatar: session.user.user_metadata.avatar,
         });
       } else {
         setUser(null);
@@ -63,25 +71,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      console.error('Login error:', error.message);
+      console.log('Login attempt:', { data, error });
+
+      if (error) {
+        console.error('Login error:', error.message);
+        console.error('Error details:', error);
+        return false;
+      }
+
+      if (data?.user) {
+        console.log('Login successful:', data.user);
+        return true;
+      }
+
+      return false;
+    } catch (err) {
+      console.error('Unexpected login error:', err);
       return false;
     }
-    return true;
   };
 
-  const signup = async (name: string, email: string, password: string): Promise<boolean> => {
+  const signup = async (
+    name: string,
+    email: string,
+    password: string,
+    userType: 'individual' | 'company' = 'individual',
+    companyName?: string
+  ): Promise<boolean> => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           name,
+          user_type: userType,
+          company_name: companyName,
+          is_verified_brand: false, // Admin will verify later
         },
       },
     });

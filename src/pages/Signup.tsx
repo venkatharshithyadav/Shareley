@@ -8,6 +8,8 @@ const Signup: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [userType, setUserType] = useState<'individual' | 'company'>('individual');
+  const [companyName, setCompanyName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
@@ -27,10 +29,21 @@ const Signup: React.FC = () => {
       return;
     }
 
+    if (userType === 'company' && !companyName.trim()) {
+      setError('Please enter your company/brand name');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const success = await signup(name, email, password);
+      const success = await signup(
+        userType === 'company' ? companyName : name,
+        email,
+        password,
+        userType,
+        userType === 'company' ? companyName : undefined
+      );
       if (success) {
         navigate('/');
       } else {
@@ -59,20 +72,75 @@ const Signup: React.FC = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Account Type Selection */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Account Type
               </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="John Doe"
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setUserType('individual')}
+                  className={`p-4 border-2 rounded-lg transition-all ${userType === 'individual'
+                      ? 'border-pink-500 bg-pink-50 text-pink-700'
+                      : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                >
+                  <div className="font-semibold">Individual</div>
+                  <div className="text-xs text-gray-500 mt-1">Personal account</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUserType('company')}
+                  className={`p-4 border-2 rounded-lg transition-all ${userType === 'company'
+                      ? 'border-pink-500 bg-pink-50 text-pink-700'
+                      : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                >
+                  <div className="font-semibold">Company/Brand</div>
+                  <div className="text-xs text-gray-500 mt-1">Business account</div>
+                </button>
+              </div>
             </div>
+
+            {/* Company Name (shown only for company accounts) */}
+            {userType === 'company' && (
+              <div>
+                <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-2">
+                  Company/Brand Name
+                </label>
+                <input
+                  id="companyName"
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  placeholder="e.g., PUMA, Nike, Your Brand"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  This will be displayed as your brand name on campaigns
+                </p>
+              </div>
+            )}
+
+            {/* Full Name (shown only for individual accounts) */}
+            {userType === 'individual' && (
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  placeholder="John Doe"
+                />
+              </div>
+            )}
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">

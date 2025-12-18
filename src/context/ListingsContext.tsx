@@ -21,46 +21,53 @@ export const ListingsProvider: React.FC<ListingsProviderProps> = ({ children }) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchListings = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('listings')
-          .select('*')
-          .order('created_at', { ascending: false });
+  const fetchListings = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-        if (error) {
-          throw error;
-        }
-
-        // Map Supabase data to our Listing type
-        const mappedListings: Listing[] = data.map((item: any) => ({
-          id: item.id,
-          userId: item.user_id,
-          userName: item.user_name,
-          title: item.title,
-          description: item.description,
-          price: item.price,
-          type: item.type,
-          category: item.category,
-          size: item.size,
-          condition: item.condition,
-          images: item.images,
-          location: item.location,
-          createdAt: item.created_at,
-          status: item.status,
-        }));
-        setListings(mappedListings);
-      } catch (err: any) {
-        console.error('Error fetching listings:', err.message);
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      if (error) {
+        throw error;
       }
-    };
+
+      // Map Supabase data to our Listing type
+      const mappedListings: Listing[] = data.map((item: any) => ({
+        id: item.id,
+        userId: item.user_id,
+        userName: item.user_name,
+        userAvatar: item.user_avatar,
+        title: item.title,
+        description: item.description,
+        price: item.price,
+        type: item.type,
+        category: item.category,
+        size: item.size,
+        condition: item.condition,
+        images: item.images,
+        location: item.location,
+        createdAt: item.created_at,
+        status: item.status,
+        campaignId: item.campaign_id,
+      }));
+      setListings(mappedListings);
+    } catch (err: any) {
+      console.error('Error fetching listings:', err.message);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchListings();
   }, []);
+
+  const refreshListings = async () => {
+    await fetchListings();
+  };
 
   const addListing = async (listing: Omit<Listing, 'id' | 'createdAt'>) => {
     try {
@@ -79,7 +86,8 @@ export const ListingsProvider: React.FC<ListingsProviderProps> = ({ children }) 
         condition: listing.condition,
         images: listing.images,
         location: listing.location,
-        status: 'active',
+        status: listing.status,
+        campaign_id: listing.campaignId || null,
       };
 
       const { data, error } = await supabase
@@ -179,6 +187,7 @@ export const ListingsProvider: React.FC<ListingsProviderProps> = ({ children }) 
         deleteListing,
         getListingById,
         getUserListings,
+        refreshListings,
       }}
     >
       {children}

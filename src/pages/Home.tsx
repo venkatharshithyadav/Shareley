@@ -2,16 +2,19 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useListings } from '../context/ListingsContext';
+import { useBrandCampaigns } from '../context/BrandCampaignsContext';
 import ListingCard from '../components/ListingCard';
+import BrandCampaignCard from '../components/BrandCampaignCard';
 import HeroSearch from '../components/HeroSearch';
-import { Shirt, ArrowRight, Users, Heart, TrendingUp } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const Home: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const { listings, loading } = useListings();
+  const { campaigns, loading: campaignsLoading } = useBrandCampaigns();
   const recentListings = listings.filter(l => l.status === 'active').slice(0, 6);
 
-  if (loading) {
+  if (loading || campaignsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-cyan-50">
         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500"></div>
@@ -48,96 +51,60 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-white">
+      {/* Brand Campaigns Section - Main Focus */}
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose Shareley?</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Sustainable fashion made easy. Buy, sell, lend, and rent clothes with your community.
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Shop by Brand
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Exclusive deals from top international brands. Click on any brand to explore their collection.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Heart className="w-8 h-8 text-pink-500" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Sustainable</h3>
-              <p className="text-gray-600">
-                Give clothes a second life and reduce fashion waste. Every item you share makes a difference.
-              </p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-cyan-500" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Community</h3>
-              <p className="text-gray-600">
-                Connect with people in your area. Buy, sell, lend, or rent clothes with trusted community members.
-              </p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="w-8 h-8 text-purple-500" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Affordable</h3>
-              <p className="text-gray-600">
-                Find great deals on quality clothes. Or earn money by selling items you no longer need.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* How It Works */}
-      <section className="py-20 bg-gradient-to-br from-pink-50 to-cyan-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Get started in just a few simple steps
-            </p>
-          </div>
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-pink-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                1
+          {campaigns.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {campaigns.slice(0, 8).map(campaign => (
+                  <BrandCampaignCard key={campaign.id} campaign={campaign} />
+                ))}
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Sign Up</h3>
-              <p className="text-gray-600">Create your free account in seconds</p>
+
+              {campaigns.length > 8 && (
+                <div className="text-center mt-12">
+                  <Link
+                    to="/marketplace?campaigns=true"
+                    className="inline-flex items-center text-pink-500 hover:text-pink-600 font-semibold text-lg"
+                  >
+                    View All {campaigns.length} Brand Campaigns
+                    <ArrowRight className="ml-2 w-5 h-5" />
+                  </Link>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg mb-6">No brand campaigns available at the moment.</p>
+              <Link
+                to="/marketplace"
+                className="inline-flex items-center bg-pink-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-pink-600 transition-colors"
+              >
+                Browse Community Listings
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
             </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-cyan-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                2
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">List Items</h3>
-              <p className="text-gray-600">Add your clothes and choose: sell, lend, rent, or give away</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-purple-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                3
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Browse</h3>
-              <p className="text-gray-600">Discover amazing clothes from your community</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                4
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Connect</h3>
-              <p className="text-gray-600">Contact sellers and complete your transaction</p>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
       {/* Recent Listings */}
       {recentListings.length > 0 && (
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-gradient-to-br from-pink-50 to-cyan-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-12">
               <div>
-                <h2 className="text-4xl font-bold text-gray-900 mb-4">Recent Listings</h2>
+                <h2 className="text-4xl font-bold text-gray-900 mb-4">Community Listings</h2>
                 <p className="text-xl text-gray-600">Check out the latest items from our community</p>
               </div>
               <Link
@@ -190,4 +157,3 @@ const Home: React.FC = () => {
 };
 
 export default Home;
-

@@ -1,4 +1,4 @@
-import { Listing } from '../types';
+import { Listing, BrandCampaign } from '../types';
 
 // This is a simulated AI service. In a real production app, 
 // this would call OpenAI or Gemini API to analyze the intent.
@@ -14,7 +14,7 @@ export const analyzeSearchIntent = (query: string, listings: Listing[]) => {
 
     // 2. Extract keywords for semantic matching
     // Remove common stop words to focus on the core request
-    const stopWords = ['i', 'want', 'looking', 'for', 'a', 'an', 'the', 'suggest', 'me', 'outfit', 'clothes', 'wear', 'to', 'in', 'at', 'going'];
+    const stopWords = ['i', 'want', 'looking', 'for', 'a', 'an', 'the', 'suggest', 'me', 'outfit', 'clothes', 'wear', 'to', 'in', 'at', 'going', 'show'];
     const keywords = lowerQuery.split(' ').filter(word => !stopWords.includes(word));
 
     // 3. Score listings based on relevance
@@ -79,4 +79,28 @@ export const analyzeSearchIntent = (query: string, listings: Listing[]) => {
         .filter(item => item.score > 0)
         .sort((a, b) => b.score - a.score)
         .map(item => item.listing);
+};
+
+// Extract brand name from search query
+export const extractBrandFromQuery = (query: string): string | null => {
+    const lowerQuery = query.toLowerCase();
+
+    // Common brand keywords
+    const brandKeywords = ['puma', 'nike', 'adidas', 'zara', 'h&m', 'gucci', 'armani', 'lacoste', 'ea7', 'uniqlo', 'gap', 'levi', 'tommy', 'calvin klein', 'ralph lauren'];
+
+    for (const brand of brandKeywords) {
+        if (lowerQuery.includes(brand)) {
+            return brand.charAt(0).toUpperCase() + brand.slice(1);
+        }
+    }
+
+    return null;
+};
+
+// Analyze if query is looking for brand campaigns
+export const isBrandQuery = (query: string): boolean => {
+    const lowerQuery = query.toLowerCase();
+    return lowerQuery.includes('brand') ||
+        lowerQuery.includes('campaign') ||
+        extractBrandFromQuery(query) !== null;
 };

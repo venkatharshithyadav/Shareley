@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useListings } from '../context/ListingsContext';
 import { useAuth } from '../context/AuthContext';
+import { useBrandCampaigns } from '../context/BrandCampaignsContext';
 import { ListingType } from '../types';
 import { Shirt, ArrowLeft, Upload, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -9,7 +10,10 @@ import { supabase } from '../lib/supabase';
 const AddListing: React.FC = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { addListing } = useListings();
+  const { campaigns } = useBrandCampaigns();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const campaignIdFromUrl = searchParams.get('campaignId');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -21,11 +25,17 @@ const AddListing: React.FC = () => {
     condition: '',
     location: '',
     images: [] as string[],
+    campaignId: campaignIdFromUrl || '',
   });
 
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Get user's campaigns if they're a brand
+  const userCampaigns = user?.userType === 'company'
+    ? campaigns.filter(c => c.userId === user.id)
+    : [];
 
   React.useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -52,18 +62,27 @@ const AddListing: React.FC = () => {
 
       const file = e.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${Date.now()}_${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log('Uploading file:', fileName);
+      console.log('File size:', file.size);
+      console.log('File type:', file.type);
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('listing-images')
         .upload(filePath, file);
 
+      console.log('Upload response:', { uploadData, uploadError });
+
       if (uploadError) {
-        throw uploadError;
+        console.error('Upload error details:', uploadError);
+        throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
       const { data } = supabase.storage.from('listing-images').getPublicUrl(filePath);
+
+      console.log('Public URL:', data.publicUrl);
 
       setFormData(prev => ({
         ...prev,
@@ -71,7 +90,8 @@ const AddListing: React.FC = () => {
       }));
 
     } catch (error: any) {
-      setError(error.message);
+      console.error('Image upload error:', error);
+      setError(error.message || 'Failed to upload image. Please check your Supabase storage configuration.');
     } finally {
       setUploading(false);
     }
@@ -102,17 +122,33 @@ const AddListing: React.FC = () => {
         return;
       }
 
+      console.log('Creating listing with data:', {
+        ...formData,
+        userId: user.id,
+        campaignId: formData.campaignId,
+      });
+
       await addListing({
         ...formData,
         userId: user.id,
         userName: user.name,
         userAvatar: user.avatar,
         status: 'active',
+        campaignId: formData.campaignId || undefined,
       });
 
-      navigate('/marketplace');
-    } catch (err) {
-      setError('Failed to create listing. Please try again.');
+      console.log('Listing created successfully!');
+
+      // Navigate to campaign detail if adding to campaign, otherwise marketplace
+      if (formData.campaignId) {
+        console.log('Navigating to campaign:', formData.campaignId);
+        navigate(`/campaign/${formData.campaignId}`);
+      } else {
+        navigate('/marketplace');
+      }
+    } catch (err: any) {
+      console.error('Failed to create listing:', err);
+      setError(`Failed to create listing: ${err.message || 'Please try again.'}`);
     } finally {
       setLoading(false);
     }
@@ -193,6 +229,31 @@ const AddListing: React.FC = () => {
                 placeholder="Describe your item..."
               />
             </div>
+
+            {/* Campaign Selection (for brand users) */}
+            {user?.userType === 'company' && userCampaigns.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Add to Campaign (Optional)
+                </label>
+                <select
+                  name="campaignId"
+                  value={formData.campaignId}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                >
+                  <option value="">No campaign (regular listing)</option>
+                  {userCampaigns.map(campaign => (
+                    <option key={campaign.id} value={campaign.id}>
+                      {campaign.campaignTitle}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Select a campaign to add this product to your brand campaign
+                </p>
+              </div>
+            )}
 
             {/* Image Upload */}
             <div>
@@ -305,21 +366,25 @@ const AddListing: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Price {formData.type !== 'free' && <span className="text-red-500">*</span>}
                 </label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  min="0"
-                  step="0.01"
-                  disabled={formData.type === 'free'}
-                  required={formData.type !== 'free'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="0.00"
-                />
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price || ''}
+                    onChange={handleChange}
+                    min="0"
+                    step="1"
+                    disabled={formData.type === 'free'}
+                    required={formData.type !== 'free'}
+                    className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent disabled:bg-gray-100"
+                    placeholder="Enter price (e.g., 50)"
+                  />
+                </div>
                 {formData.type === 'free' && (
                   <p className="mt-1 text-sm text-gray-500">This item will be listed as free</p>
                 )}
+                <p className="mt-1 text-xs text-gray-400">Enter whole numbers. Decimals are optional.</p>
               </div>
             </div>
 
