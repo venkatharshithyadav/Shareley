@@ -1,4 +1,4 @@
-# Shareley - MZ Clothing Website
+# Shareley - AI powered Clothing Website
 
 A modern, responsive clothing website built with React, TypeScript, Vite, and Tailwind CSS.
 
