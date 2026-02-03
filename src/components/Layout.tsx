@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { Toaster } from 'react-hot-toast';
+import ChatWidget from './ChatWidget';
 
 const Layout: React.FC = () => {
     return (
@@ -11,6 +12,7 @@ const Layout: React.FC = () => {
             <main className="flex-grow pt-16">
                 <Outlet />
             </main>
+            <ChatWidget />
             <Footer />
             <Toaster
                 position="bottom-right"

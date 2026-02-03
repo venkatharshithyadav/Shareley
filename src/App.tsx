@@ -15,27 +15,31 @@ import CampaignDetail from './pages/CampaignDetail';
 import EditCampaign from './pages/EditCampaign';
 import Layout from './components/Layout';
 
+import { ChatProvider } from './context/ChatContext';
+
 function App() {
   return (
     <AuthProvider>
       <ListingsProvider>
         <BrandCampaignsProvider>
-          <Router>
-            <Routes>
-              <Route element={<Layout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/marketplace" element={<Marketplace />} />
-                <Route path="/add-listing" element={<AddListing />} />
-                <Route path="/create-campaign" element={<CreateCampaign />} />
-                <Route path="/campaign/:id" element={<CampaignDetail />} />
-                <Route path="/edit-campaign/:id" element={<EditCampaign />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/listing/:id" element={<ListingDetail />} />
-              </Route>
-            </Routes>
-          </Router>
+          <ChatProvider>
+            <Router>
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/marketplace" element={<Marketplace />} />
+                  <Route path="/add-listing" element={<AddListing />} />
+                  <Route path="/create-campaign" element={<CreateCampaign />} />
+                  <Route path="/campaign/:id" element={<CampaignDetail />} />
+                  <Route path="/edit-campaign/:id" element={<EditCampaign />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/listing/:id" element={<ListingDetail />} />
+                </Route>
+              </Routes>
+            </Router>
+          </ChatProvider>
         </BrandCampaignsProvider>
       </ListingsProvider>
     </AuthProvider>

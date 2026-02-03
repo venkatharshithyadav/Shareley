@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Listing } from '../types';
-import { MapPin, DollarSign, Calendar } from 'lucide-react';
+import { MapPin, DollarSign, Calendar, Heart } from 'lucide-react';
 
 interface ListingCardProps {
   listing: Listing;
@@ -11,15 +11,15 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'sell':
-        return 'bg-green-100 text-green-800';
+        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       case 'lend':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'rent':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-violet-100 text-violet-700 border-violet-200';
       case 'free':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-amber-100 text-amber-700 border-amber-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
@@ -39,54 +39,51 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
   };
 
   return (
-    <Link to={`/listing/${listing.id}`} className="block">
-      <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 overflow-hidden h-full">
-        <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative">
+    <Link to={`/listing/${listing.id}`} className="block group h-full">
+      <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-full border border-gray-100 flex flex-col">
+        <div className="aspect-[4/5] bg-gray-100 relative overflow-hidden">
           {listing.images && listing.images.length > 0 ? (
             <img
               src={listing.images[0]}
               alt={listing.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           ) : (
-            <div className="text-gray-400 text-4xl">👕</div>
-          )}
-          <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold ${getTypeColor(listing.type)}`}>
-            {getTypeLabel(listing.type)}
-          </div>
-        </div>
-        <div className="p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">{listing.title}</h3>
-          <p className="text-gray-600 mb-4 line-clamp-2">{listing.description}</p>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
-              <span className="flex items-center">
-                <MapPin className="w-4 h-4 mr-1" />
-                {listing.location}
-              </span>
+            <div className="w-full h-full flex items-center justify-center text-gray-300">
+              <span className="text-4xl">📷</span>
             </div>
-            {listing.price > 0 ? (
-              <div className="flex items-center text-lg font-bold text-gray-900">
-                <DollarSign className="w-5 h-5" />
-                {listing.price}
-              </div>
-            ) : (
-              <div className="text-lg font-bold text-green-600">Free</div>
-            )}
-          </div>
-          <div className="flex items-center justify-between text-sm text-gray-500">
-            <span>{listing.category} • {listing.size}</span>
-            <span className="flex items-center">
-              <Calendar className="w-4 h-4 mr-1" />
-              {new Date(listing.createdAt).toLocaleDateString()}
+          )}
+
+          <div className="absolute top-3 left-3">
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-md bg-white/90 shadow-sm ${getTypeColor(listing.type)}`}>
+              {getTypeLabel(listing.type)}
             </span>
           </div>
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold">
-                {listing.userName.charAt(0).toUpperCase()}
-              </div>
-              <span className="ml-2 text-sm text-gray-600">{listing.userName}</span>
+
+          <button className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-sm text-gray-600 hover:text-red-500 hover:bg-white transition-all opacity-0 group-hover:opacity-100 list-none z-10">
+            <Heart className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-5 flex-1 flex flex-col">
+          <div className="flex items-start justify-between mb-2">
+            <h3 className="text-lg font-bold text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">{listing.title}</h3>
+            <div className="flex items-center font-bold text-gray-900 bg-gray-50 px-2 py-1 rounded-lg">
+              <DollarSign className="w-3.5 h-3.5 text-gray-500 mr-0.5" />
+              {listing.price > 0 ? listing.price : 'Free'}
+            </div>
+          </div>
+
+          <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed flex-1">{listing.description}</p>
+
+          <div className="pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400">
+            <div className="flex items-center space-x-1">
+              <MapPin className="w-3.5 h-3.5" />
+              <span className="truncate max-w-[80px]">{listing.location}</span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span>{listing.size}</span>
+              <span>{listing.condition}</span>
             </div>
           </div>
         </div>

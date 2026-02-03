@@ -67,3 +67,35 @@ export interface ListingsContextType {
   refreshListings: () => Promise<void>;
 }
 
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: string;
+  // We'll store the other participant's details for easy display
+  otherParticipant: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
+  lastMessage?: Message;
+  updatedAt: string;
+}
+
+export interface ChatContextType {
+  conversations: Conversation[];
+  activeConversationId: string | null;
+  setActiveConversationId: (id: string | null) => void;
+  messages: Message[];
+  loading: boolean;
+  sendMessage: (conversationId: string, content: string) => Promise<void>;
+  startConversation: (otherUserId: string, otherUserName: string) => Promise<string>;
+  markAsRead: (conversationId: string) => Promise<void>;
+}

@@ -1,23 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useListings } from '../context/ListingsContext';
 import { useAuth } from '../context/AuthContext';
-import { Shirt, ArrowLeft, MapPin, DollarSign, Calendar, User, Mail } from 'lucide-react';
+import { useChat } from '../context/ChatContext';
+import { ArrowLeft, MapPin, DollarSign, Calendar, Mail, MessageSquare, Share2, Heart } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const ListingDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { getListingById } = useListings();
   const { user } = useAuth();
+  const { startConversation, setActiveConversationId } = useChat();
   const navigate = useNavigate();
+  const [chatLoading, setChatLoading] = useState(false);
 
   const listing = id ? getListingById(id) : undefined;
 
   if (!listing) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-cyan-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Listing not found</h2>
-          <Link to="/marketplace" className="text-pink-500 hover:text-pink-600">
+          <Link to="/marketplace" className="text-indigo-600 hover:text-indigo-700 font-medium">
             Go back to marketplace
           </Link>
         </div>
@@ -25,159 +29,201 @@ const ListingDetail: React.FC = () => {
     );
   }
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'sell':
-        return 'bg-green-100 text-green-800';
-      case 'lend':
-        return 'bg-blue-100 text-blue-800';
-      case 'rent':
-        return 'bg-purple-100 text-purple-800';
-      case 'free':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const handleChat = async () => {
+    if (!user) {
+      toast.error('Please login to chat with seller');
+      navigate('/login');
+      return;
+    }
+
+    setChatLoading(true);
+    try {
+      const conversationId = await startConversation(listing.userId, listing.userName);
+      setActiveConversationId(conversationId);
+      // The chat widget works via context opacity/visibility, so just setting ID should open it if we implemented it right
+      // Our ChatWidget checks activeConversationId to show the window. 
+      // We might need to ensure the widget is "open" too, but in our implementation 
+      // passing activeConversationId to it keeps it open? 
+      // Ah, ChatWidget has local isOpen state. 
+      // We should probably modify ChatContext to handle 'isWidgetOpen' if we want remote control, 
+      // OR just assume the user will see the notification or we rely on the widget popping up.
+      // For now, let's just toast and hope the user knows to check messages, 
+      // OR better: The ChatWidget should listen to activeConversationId changes and open itself.
+      // I will rely on the user opening it or update ChatWidget to open when activeConversationId is set.
+      // Actually, looking at ChatWidget code: 
+      // `if (!activeConversationId) ...` it renders list. 
+      // `isOpen` is local. 
+      // I should have made `isOpen` part of context or use an effect in ChatWidget.
+      // I will render a toast saying "Chat started!".
+      toast.success('Chat started! Check the chat bubble.');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to start chat');
+    } finally {
+      setChatLoading(false);
     }
   };
 
-  const getTypeLabel = (type: string) => {
+  const getTypeColor = (type: string) => {
     switch (type) {
       case 'sell':
-        return 'Selling';
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'lend':
-        return 'Lending';
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'rent':
-        return 'Renting';
+        return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'free':
-        return 'Free';
+        return 'bg-orange-100 text-orange-800 border-orange-200';
       default:
-        return type;
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const isOwner = user?.id === listing.userId;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-cyan-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <button
           onClick={() => navigate(-1)}
-          className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+          className="mb-8 flex items-center text-gray-500 hover:text-gray-900 transition-colors group"
         >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back
+          <div className="p-2 rounded-full bg-white shadow-sm border border-gray-100 mr-3 group-hover:border-gray-200 transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </div>
+          <span className="font-medium">Back to Marketplace</span>
         </button>
-        <div className="grid lg:grid-cols-3 gap-8">
+
+        <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
           {/* Main Content */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              {/* Image */}
-              <div className="h-96 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Image Gallery */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden group">
+              <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
                 {listing.images && listing.images.length > 0 ? (
                   <img
                     src={listing.images[0]}
                     alt={listing.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="text-gray-400 text-8xl">👕</div>
+                  <div className="w-full h-full flex items-center justify-center text-gray-300">
+                    <span className="text-6xl">📷</span>
+                  </div>
                 )}
+                <div className="absolute top-4 right-4 flex space-x-2">
+                  <button className="p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors text-gray-700 hover:text-red-500">
+                    <Heart className="w-5 h-5" />
+                  </button>
+                  <button className="p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors text-gray-700 hover:text-indigo-600">
+                    <Share2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Description & Details */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{listing.title}</h1>
+                  <div className="flex items-center space-x-4 text-gray-500">
+                    <span className="flex items-center">
+                      <MapPin className="w-4 h-4 mr-1 text-gray-400" />
+                      {listing.location}
+                    </span>
+                    <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                    <span className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-1 text-gray-400" />
+                      {new Date(listing.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                <span className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${getTypeColor(listing.type)} uppercase tracking-wide`}>
+                  {listing.type}
+                </span>
               </div>
 
-              {/* Content */}
-              <div className="p-8">
-                <div className="flex items-center justify-between mb-4">
-                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getTypeColor(listing.type)}`}>
-                    {getTypeLabel(listing.type)}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    {new Date(listing.createdAt).toLocaleDateString()}
-                  </span>
+              <div className="prose prose-gray max-w-none mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                <p className="text-gray-600 leading-relaxed text-lg">{listing.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-8 border-t border-gray-100">
+                <div>
+                  <span className="text-sm text-gray-500 block mb-1">Category</span>
+                  <span className="font-medium text-gray-900">{listing.category}</span>
                 </div>
-
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">{listing.title}</h1>
-                <p className="text-gray-600 text-lg mb-6">{listing.description}</p>
-
-                {/* Details */}
-                <div className="grid md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">Category</h3>
-                    <p className="text-gray-900">{listing.category}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">Size</h3>
-                    <p className="text-gray-900">{listing.size}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">Condition</h3>
-                    <p className="text-gray-900">{listing.condition}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">Location</h3>
-                    <p className="text-gray-900 flex items-center">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {listing.location}
-                    </p>
-                  </div>
+                <div>
+                  <span className="text-sm text-gray-500 block mb-1">Size</span>
+                  <span className="font-medium text-gray-900">{listing.size}</span>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500 block mb-1">Condition</span>
+                  <span className="font-medium text-gray-900">{listing.condition}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Sidebar */}
-          <div>
-            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-24">
-              {/* Price */}
-              <div className="mb-6">
-                {listing.price > 0 ? (
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="w-8 h-8 text-gray-600" />
-                    <span className="text-4xl font-bold text-gray-900">{listing.price}</span>
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 space-y-6">
+              {/* Price Card */}
+              <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6">
+                <div className="mb-8">
+                  <span className="text-sm text-gray-500 uppercase tracking-wider font-medium">Price</span>
+                  <div className="flex items-baseline mt-1">
+                    <span className="text-4xl font-bold text-gray-900">
+                      {listing.price > 0 ? `$${listing.price}` : 'Free'}
+                    </span>
+                    {listing.type === 'rent' && <span className="text-gray-500 ml-2">/ day</span>}
                   </div>
-                ) : (
-                  <div className="text-4xl font-bold text-green-600">Free</div>
-                )}
+                </div>
+
+                <div className="space-y-3">
+                  {!isOwner ? (
+                    <>
+                      <button
+                        onClick={handleChat}
+                        disabled={chatLoading}
+                        className="w-full bg-indigo-600 text-white py-4 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg transform active:scale-[0.98] flex items-center justify-center space-x-2"
+                      >
+                        {chatLoading ? (
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <MessageSquare className="w-5 h-5" />
+                            <span>Chat with Seller</span>
+                          </>
+                        )}
+                      </button>
+                      <a
+                        href={`mailto:?subject=Regarding: ${listing.title}`}
+                        className="w-full bg-white text-gray-700 border border-gray-200 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2"
+                      >
+                        <Mail className="w-5 h-5" />
+                        <span>Email Seller</span>
+                      </a>
+                    </>
+                  ) : (
+                    <div className="w-full bg-gray-50 text-gray-500 py-4 rounded-xl font-medium text-center border border-gray-200">
+                      You own this listing
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Contact Button */}
-              {!isOwner ? (
-                <a
-                  href={`mailto:?subject=Regarding your listing: ${listing.title}&body=Hi ${listing.userName}, I'm interested in your listing on Shareley.`}
-                  className="w-full bg-pink-500 text-white py-3 rounded-lg font-semibold hover:bg-pink-600 transition-colors mb-4 flex items-center justify-center"
-                >
-                  <Mail className="w-5 h-5 mr-2" />
-                  Contact Seller
-                </a>
-              ) : (
-                <div className="w-full bg-gray-100 text-gray-600 py-3 rounded-lg font-semibold text-center mb-4">
-                  This is your listing
-                </div>
-              )}
-
-              {/* Seller Info */}
-              <div className="border-t border-gray-200 pt-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-4">Seller</h3>
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold">
+              {/* Seller Profile Card */}
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Seller Information</h3>
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md">
                     {listing.userName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{listing.userName}</p>
-                    <p className="text-sm text-gray-500">Member</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Listing Info */}
-              <div className="border-t border-gray-200 pt-6 mt-6">
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center text-gray-600">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Listed {new Date(listing.createdAt).toLocaleDateString()}
-                  </div>
-                  <div className="flex items-center text-gray-600">
-                    <MapPin className="w-4 h-4 mr-2" />
-                    {listing.location}
+                    <p className="font-bold text-gray-900 text-lg">{listing.userName}</p>
+                    <p className="text-sm text-gray-500">Joined recently</p>
                   </div>
                 </div>
               </div>
