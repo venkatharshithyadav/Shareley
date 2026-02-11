@@ -1,10 +1,18 @@
--- Conversations Table
+-- Safely add columns if they don't exist (Migration)
+alter table conversations add column if not exists participant1_avatar text;
+alter table conversations add column if not exists participant2_avatar text;
+alter table conversations add column if not exists last_message text;
+
+-- Conversations Table (only creates if completely missing)
 create table if not exists conversations (
   id uuid default uuid_generate_v4() primary key,
   participant1_id uuid references auth.users not null,
   participant2_id uuid references auth.users not null,
   participant1_name text,
   participant2_name text,
+  participant1_avatar text,
+  participant2_avatar text,
+  last_message text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -32,15 +40,39 @@ create table if not exists messages (
 alter table conversations enable row level security;
 alter table messages enable row level security;
 
+-- Enable Realtime safely
+do $$
+begin
+  -- Create publication if it doesn't exist
+  if not exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    create publication supabase_realtime;
+  end if;
+
+  -- Add conversations table if not present
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'conversations') then
+    alter publication supabase_realtime add table conversations;
+  end if;
+
+  -- Add messages table if not present
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'messages') then
+    alter publication supabase_realtime add table messages;
+  end if;
+end
+$$;
+
 -- Policies
+-- Safely recreate policies (Drop first so we can update them if needed)
+drop policy if exists "Users can view their own conversations" on conversations;
 create policy "Users can view their own conversations"
   on conversations for select
   using (auth.uid() = participant1_id or auth.uid() = participant2_id);
 
+drop policy if exists "Users can insert conversations they are part of" on conversations;
 create policy "Users can insert conversations they are part of"
   on conversations for insert
   with check (auth.uid() = participant1_id or auth.uid() = participant2_id);
 
+drop policy if exists "Users can view messages in their conversations" on messages;
 create policy "Users can view messages in their conversations"
   on messages for select
   using (
@@ -51,6 +83,7 @@ create policy "Users can view messages in their conversations"
     )
   );
 
+drop policy if exists "Users can insert messages in their conversations" on messages;
 create policy "Users can insert messages in their conversations"
   on messages for insert
   with check (

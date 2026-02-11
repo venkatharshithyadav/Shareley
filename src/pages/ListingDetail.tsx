@@ -10,7 +10,7 @@ const ListingDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { getListingById } = useListings();
   const { user } = useAuth();
-  const { startConversation, setActiveConversationId } = useChat();
+  const { startConversation, setActiveConversationId, setIsChatOpen } = useChat();
   const navigate = useNavigate();
   const [chatLoading, setChatLoading] = useState(false);
 
@@ -38,24 +38,9 @@ const ListingDetail: React.FC = () => {
 
     setChatLoading(true);
     try {
-      const conversationId = await startConversation(listing.userId, listing.userName);
+      const conversationId = await startConversation(listing.userId, listing.userName, listing.userAvatar);
       setActiveConversationId(conversationId);
-      // The chat widget works via context opacity/visibility, so just setting ID should open it if we implemented it right
-      // Our ChatWidget checks activeConversationId to show the window. 
-      // We might need to ensure the widget is "open" too, but in our implementation 
-      // passing activeConversationId to it keeps it open? 
-      // Ah, ChatWidget has local isOpen state. 
-      // We should probably modify ChatContext to handle 'isWidgetOpen' if we want remote control, 
-      // OR just assume the user will see the notification or we rely on the widget popping up.
-      // For now, let's just toast and hope the user knows to check messages, 
-      // OR better: The ChatWidget should listen to activeConversationId changes and open itself.
-      // I will rely on the user opening it or update ChatWidget to open when activeConversationId is set.
-      // Actually, looking at ChatWidget code: 
-      // `if (!activeConversationId) ...` it renders list. 
-      // `isOpen` is local. 
-      // I should have made `isOpen` part of context or use an effect in ChatWidget.
-      // I will render a toast saying "Chat started!".
-      toast.success('Chat started! Check the chat bubble.');
+      setIsChatOpen(true);
     } catch (error) {
       console.error(error);
       toast.error('Failed to start chat');

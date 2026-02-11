@@ -12,10 +12,11 @@ const ChatWidget: React.FC = () => {
         setActiveConversationId,
         messages,
         sendMessage,
-        loading
+        loading,
+        isChatOpen,
+        setIsChatOpen
     } = useChat();
 
-    const [isOpen, setIsOpen] = useState(false);
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -24,7 +25,14 @@ const ChatWidget: React.FC = () => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [messages, isOpen, activeConversationId]);
+    }, [messages, isChatOpen, activeConversationId]);
+
+    // Auto-open on active conversation
+    useEffect(() => {
+        if (activeConversationId) {
+            setIsChatOpen(true);
+        }
+    }, [activeConversationId, setIsChatOpen]);
 
     // Handle sending message
     const handleSendMessage = async (e: React.FormEvent) => {
@@ -40,7 +48,7 @@ const ChatWidget: React.FC = () => {
     return (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
             {/* Chat Window */}
-            {isOpen && (
+            {isChatOpen && (
                 <div className="mb-4 w-96 h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden pointer-events-auto transition-all animate-fade-in-up">
                     {/* Header */}
                     <div className="bg-indigo-600 p-4 flex items-center justify-between text-white shrink-0">
@@ -55,12 +63,21 @@ const ChatWidget: React.FC = () => {
                             ) : (
                                 <MessageSquare className="w-5 h-5" />
                             )}
-                            <span className="font-semibold text-lg">
-                                {activeConversationId ? 'Chat' : 'Messages'}
-                            </span>
+                            <div className="flex flex-col">
+                                <span className="font-semibold text-lg leading-tight">
+                                    {activeConversationId
+                                        ? conversations.find(c => c.id === activeConversationId)?.otherParticipant.name || 'Chat'
+                                        : 'Messages'}
+                                </span>
+                                {activeConversationId && (
+                                    <span className="text-xs text-indigo-200">
+                                        Active now
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <button
-                            onClick={() => setIsOpen(false)}
+                            onClick={() => setIsChatOpen(false)}
                             className="hover:bg-indigo-700 p-1 rounded-full transition-colors"
                         >
                             <X className="w-5 h-5" />
@@ -85,19 +102,21 @@ const ChatWidget: React.FC = () => {
                                             onClick={() => setActiveConversationId(conv.id)}
                                             className="w-full p-4 flex items-center space-x-4 hover:bg-white transition-colors text-left bg-white/50 backdrop-blur-sm"
                                         >
-                                            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden relative">
                                                 {conv.otherParticipant.avatar ? (
-                                                    <img src={conv.otherParticipant.avatar} alt={conv.otherParticipant.name} className="w-12 h-12 rounded-full object-cover" />
+                                                    <img src={conv.otherParticipant.avatar} alt={conv.otherParticipant.name} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <User className="w-6 h-6 text-indigo-500" />
+                                                    <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                                                        {conv.otherParticipant.name.charAt(0).toUpperCase()}
+                                                    </div>
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="font-medium text-gray-900 truncate">
                                                     {conv.otherParticipant.name}
                                                 </h4>
-                                                <p className="text-sm text-gray-500 truncate">
-                                                    Click to view messages
+                                                <p className={`text-sm truncate ${conv.lastMessage ? 'text-gray-600' : 'text-indigo-500'}`}>
+                                                    {conv.lastMessage ? conv.lastMessage.content : 'Click to view messages'}
                                                 </p>
                                             </div>
                                             <span className="text-xs text-gray-400 whitespace-nowrap">
@@ -128,8 +147,8 @@ const ChatWidget: React.FC = () => {
                                                     className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
                                                 >
                                                     <div className={`max-w-[75%] px-4 py-2 rounded-2xl shadow-sm text-sm ${isMe
-                                                            ? 'bg-indigo-600 text-white rounded-br-none'
-                                                            : 'bg-white text-gray-800 rounded-bl-none border border-gray-100'
+                                                        ? 'bg-indigo-600 text-white rounded-br-none'
+                                                        : 'bg-white text-gray-800 rounded-bl-none border border-gray-100'
                                                         }`}>
                                                         {msg.content}
                                                     </div>
@@ -167,10 +186,10 @@ const ChatWidget: React.FC = () => {
 
             {/* Float Button */}
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => setIsChatOpen(!isChatOpen)}
                 className="w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 pointer-events-auto relative group"
             >
-                {isOpen ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
+                {isChatOpen ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
 
                 {/* Notification Badge could go here */}
                 {/* <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-white"></span> */}

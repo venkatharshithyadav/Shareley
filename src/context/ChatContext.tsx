@@ -12,6 +12,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     // Fetch conversations
     useEffect(() => {
@@ -34,14 +35,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     const isParticipant1 = conv.participant1_id === user.id;
                     const otherId = isParticipant1 ? conv.participant2_id : conv.participant1_id;
                     const otherName = isParticipant1 ? conv.participant2_name : conv.participant1_name;
+                    const otherAvatar = isParticipant1 ? conv.participant2_avatar : conv.participant1_avatar;
 
                     return {
                         id: conv.id,
                         otherParticipant: {
                             id: otherId,
                             name: otherName || 'User',
-                            avatar: undefined
+                            avatar: otherAvatar
                         },
+                        lastMessage: conv.last_message ? { content: conv.last_message } as Message : undefined,
                         updatedAt: conv.updated_at
                     };
                 });
@@ -54,18 +57,61 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         fetchConversations();
 
-        // Subscribe to new conversations
+        // Subscribe to new conversations and updates
         const subscription = supabase
             .channel('public:conversations')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'conversations' }, (payload) => {
-                if (payload.new.participant1_id === user.id || payload.new.participant2_id === user.id) {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, (payload) => {
+                const newData = payload.new as any;
+                if (newData && (newData.participant1_id === user.id || newData.participant2_id === user.id)) {
                     fetchConversations();
+
+                    // If it's an update (message sent), notification logic could go here if we tracked last read status
+                    // But simpler: let's listen to 'messages' globally for notifications
+                }
+            })
+            .subscribe();
+
+        // Listen for ANY new message to show notifications
+        const messageSubscription = supabase
+            .channel('global:messages')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
+                const newMsg = payload.new as any;
+                // We need to check if this message is for us
+                // We can't easily check receiver_id here without querying the conversation
+                // But since RLS is on, we presumably only receive messages we can see.
+                // We just need to filter out messages sent BY us.
+                if (newMsg.sender_id !== user.id) {
+                    // Fetch sender name
+                    // We can find it in our local conversations list if it's there
+                    // But conversations state might be stale in this closure? 
+                    // Use a functional update or just query DB
+                    // Let's query DB for the *sender name* (which is the other participant of the conversation)
+                    // Actually, we can just show "New Message"
+                    // Or better:
+                    const { data: conv } = await supabase
+                        .from('conversations')
+                        .select('participant1_id, participant2_id, participant1_name, participant2_name')
+                        .eq('id', newMsg.conversation_id)
+                        .single();
+
+                    if (conv) {
+                        const name = conv.participant1_id === newMsg.sender_id ? conv.participant1_name : conv.participant2_name;
+                        toast.success(`New message from ${name || 'User'}`, {
+                            id: newMsg.id, // Prevent duplicates
+                            duration: 5000,
+                            icon: '💬'
+                        });
+
+                        // Also refresh conversations if not handled by the other subscription
+                        fetchConversations();
+                    }
                 }
             })
             .subscribe();
 
         return () => {
             supabase.removeChannel(subscription);
+            supabase.removeChannel(messageSubscription);
         };
 
     }, [user]);
@@ -147,10 +193,25 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (error) throw error;
 
-            // Update conversation updated_at
+            // Update conversation updated_at and last_message, and ensure avatar is set
+            const { data: conv } = await supabase.from('conversations').select('participant1_id').eq('id', conversationId).single();
+
+            const updatePayload: any = {
+                updated_at: new Date().toISOString(),
+                last_message: content
+            };
+
+            if (conv) {
+                if (conv.participant1_id === user.id) {
+                    updatePayload.participant1_avatar = user.avatar;
+                } else {
+                    updatePayload.participant2_avatar = user.avatar;
+                }
+            }
+
             await supabase
                 .from('conversations')
-                .update({ updated_at: new Date().toISOString() })
+                .update(updatePayload)
                 .eq('id', conversationId);
 
         } catch (error) {
@@ -160,7 +221,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const startConversation = async (otherUserId: string, otherUserName: string): Promise<string> => {
+    const startConversation = async (otherUserId: string, otherUserName: string, otherUserAvatar?: string): Promise<string> => {
         if (!user) throw new Error('Not authenticated');
 
         // Check if conversation already exists
@@ -175,11 +236,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (existingConvs && existingConvs.length > 0) {
+            // Optional: Update avatar if it changed? Maybe later.
             return existingConvs[0].id;
         }
 
-        // Create new conversation with names
+        // Create new conversation with names and avatars
         const myName = user.name || 'User';
+        const myAvatar = user.avatar;
 
         const { data, error } = await supabase
             .from('conversations')
@@ -187,7 +250,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 participant1_id: user.id,
                 participant2_id: otherUserId,
                 participant1_name: myName,
-                participant2_name: otherUserName
+                participant2_name: otherUserName,
+                participant1_avatar: myAvatar,
+                participant2_avatar: otherUserAvatar
             })
             .select()
             .single();
@@ -215,7 +280,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             loading,
             sendMessage,
             startConversation,
-            markAsRead
+            markAsRead,
+            isChatOpen,
+            setIsChatOpen
         }}>
             {children}
         </ChatContext.Provider>

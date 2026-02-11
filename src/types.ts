@@ -96,6 +96,8 @@ export interface ChatContextType {
   messages: Message[];
   loading: boolean;
   sendMessage: (conversationId: string, content: string) => Promise<void>;
-  startConversation: (otherUserId: string, otherUserName: string) => Promise<string>;
+  startConversation: (otherUserId: string, otherUserName: string, otherUserAvatar?: string) => Promise<string>;
   markAsRead: (conversationId: string) => Promise<void>;
+  isChatOpen: boolean;
+  setIsChatOpen: (isOpen: boolean) => void;
 }
