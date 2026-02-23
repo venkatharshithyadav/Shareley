@@ -72,6 +72,12 @@ create policy "Users can insert conversations they are part of"
   on conversations for insert
   with check (auth.uid() = participant1_id or auth.uid() = participant2_id);
 
+-- Add Update Policy (Critical for last_message updates)
+drop policy if exists "Users can update conversations they are part of" on conversations;
+create policy "Users can update conversations they are part of"
+  on conversations for update
+  using (auth.uid() = participant1_id or auth.uid() = participant2_id);
+
 drop policy if exists "Users can view messages in their conversations" on messages;
 create policy "Users can view messages in their conversations"
   on messages for select
