@@ -69,16 +69,23 @@ const HeroSearch: React.FC = () => {
     };
 
     return (
-        <div className="relative w-full max-w-6xl mx-auto mt-12">
+        <div className="relative w-full mx-auto mt-2">
             {/* Main Container with Waves */}
-            <div className="relative flex flex-col items-center justify-center">
+            <div className="relative flex flex-col items-center justify-center w-full">
 
-                {/* Animated Wave Visualization - Always visible now */}
+                {/* Animated Wave Visualization - Centered properly and fading at edges */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                    style={{ width: '100%', height: '200px', top: '-60px' }}
+                    style={{
+                        width: '160%',
+                        left: '-30%',
+                        height: '140px',
+                        top: '-20px',
+                        maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
+                        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)'
+                    }}
                 >
                     {/* SVG Wave Container */}
                     <svg
@@ -94,16 +101,16 @@ const HeroSearch: React.FC = () => {
                             stroke="url(#gradient1)"
                             strokeWidth="3"
                             strokeLinecap="round"
-                            initial={{ pathLength: 1, opacity: 0.3 }}
+                            initial={{ pathLength: 1, opacity: 0.4 }}
                             animate={isListening ? {
-                                opacity: [0.4, 0.8, 0.4],
+                                opacity: [0.5, 0.9, 0.5],
                                 d: [
-                                    "M0,100 Q150,50 300,100 T600,100 T900,100 T1200,100",
-                                    "M0,100 Q150,150 300,100 T600,100 T900,100 T1200,100",
-                                    "M0,100 Q150,50 300,100 T600,100 T900,100 T1200,100"
+                                    "M0,100 Q150,40 300,100 T600,100 T900,100 T1200,100",
+                                    "M0,100 Q150,160 300,100 T600,100 T900,100 T1200,100",
+                                    "M0,100 Q150,40 300,100 T600,100 T900,100 T1200,100"
                                 ]
                             } : {
-                                opacity: 0.3,
+                                opacity: 0.4,
                                 d: "M0,100 Q150,50 300,100 T600,100 T900,100 T1200,100"
                             }}
                             transition={isListening ? {
@@ -119,16 +126,16 @@ const HeroSearch: React.FC = () => {
                             stroke="url(#gradient2)"
                             strokeWidth="4"
                             strokeLinecap="round"
-                            initial={{ pathLength: 1, opacity: 0.3 }}
+                            initial={{ pathLength: 1, opacity: 0.4 }}
                             animate={isListening ? {
-                                opacity: [0.5, 0.9, 0.5],
+                                opacity: [0.6, 1, 0.6],
                                 d: [
-                                    "M0,100 Q200,80 400,100 T800,100 T1200,100",
-                                    "M0,100 Q200,120 400,100 T800,100 T1200,100",
-                                    "M0,100 Q200,80 400,100 T800,100 T1200,100"
+                                    "M0,100 Q200,70 400,100 T800,100 T1200,100",
+                                    "M0,100 Q200,130 400,100 T800,100 T1200,100",
+                                    "M0,100 Q200,70 400,100 T800,100 T1200,100"
                                 ]
                             } : {
-                                opacity: 0.3,
+                                opacity: 0.4,
                                 d: "M0,100 Q200,80 400,100 T800,100 T1200,100"
                             }}
                             transition={isListening ? {
@@ -144,16 +151,16 @@ const HeroSearch: React.FC = () => {
                             stroke="url(#gradient3)"
                             strokeWidth="2.5"
                             strokeLinecap="round"
-                            initial={{ pathLength: 1, opacity: 0.2 }}
+                            initial={{ pathLength: 1, opacity: 0.3 }}
                             animate={isListening ? {
-                                opacity: [0.3, 0.7, 0.3],
+                                opacity: [0.4, 0.8, 0.4],
                                 d: [
-                                    "M0,100 Q100,70 200,100 T400,100 T600,100 T800,100 T1000,100 T1200,100",
-                                    "M0,100 Q100,130 200,100 T400,100 T600,100 T800,100 T1000,100 T1200,100",
-                                    "M0,100 Q100,70 200,100 T400,100 T600,100 T800,100 T1000,100 T1200,100"
+                                    "M0,100 Q100,60 200,100 T400,100 T600,100 T800,100 T1000,100 T1200,100",
+                                    "M0,100 Q100,140 200,100 T400,100 T600,100 T800,100 T1000,100 T1200,100",
+                                    "M0,100 Q100,60 200,100 T400,100 T600,100 T800,100 T1000,100 T1200,100"
                                 ]
                             } : {
-                                opacity: 0.2,
+                                opacity: 0.3,
                                 d: "M0,100 Q100,70 200,100 T400,100 T600,100 T800,100 T1000,100 T1200,100"
                             }}
                             transition={isListening ? {
@@ -169,16 +176,16 @@ const HeroSearch: React.FC = () => {
                             stroke="url(#gradient4)"
                             strokeWidth="3.5"
                             strokeLinecap="round"
-                            initial={{ pathLength: 1, opacity: 0.25 }}
+                            initial={{ pathLength: 1, opacity: 0.35 }}
                             animate={isListening ? {
-                                opacity: [0.4, 0.75, 0.4],
+                                opacity: [0.5, 0.85, 0.5],
                                 d: [
-                                    "M0,100 Q250,60 500,100 T1000,100 T1200,100",
-                                    "M0,100 Q250,140 500,100 T1000,100 T1200,100",
-                                    "M0,100 Q250,60 500,100 T1000,100 T1200,100"
+                                    "M0,100 Q250,50 500,100 T1000,100 T1200,100",
+                                    "M0,100 Q250,150 500,100 T1000,100 T1200,100",
+                                    "M0,100 Q250,50 500,100 T1000,100 T1200,100"
                                 ]
                             } : {
-                                opacity: 0.25,
+                                opacity: 0.35,
                                 d: "M0,100 Q250,60 500,100 T1000,100 T1200,100"
                             }}
                             transition={isListening ? {
@@ -215,7 +222,7 @@ const HeroSearch: React.FC = () => {
 
                 {/* Microphone Button - Center Stage */}
                 <motion.div
-                    className="relative z-20 mb-8"
+                    className="relative z-20 mb-4"
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.5 }}
@@ -265,21 +272,11 @@ const HeroSearch: React.FC = () => {
                             />
                         )}
                     </motion.button>
-
-                    {/* Status Text */}
-                    <motion.p
-                        className="text-center mt-4 font-semibold"
-                        animate={{
-                            color: isListening ? '#3b82f6' : '#6b7280'
-                        }}
-                    >
-                        {isListening ? 'Listening...' : 'Tap to speak'}
-                    </motion.p>
                 </motion.div>
 
                 {/* Search Bar */}
                 <motion.div
-                    className={`relative z-10 flex items-center w-full bg-white/90 backdrop-blur-xl rounded-full shadow-2xl border border-white/50 transition-all duration-300 ${isListening ? 'ring-4 ring-blue-200/50' : 'hover:shadow-3xl'
+                    className={`relative z-10 flex items-center w-full max-w-2xl mx-auto bg-white/90 backdrop-blur-xl rounded-full shadow-2xl border border-white/50 transition-all duration-300 ${isListening ? 'ring-4 ring-blue-200/50' : 'hover:shadow-3xl'
                         }`}
                     style={{
                         height: '56px',
@@ -313,7 +310,7 @@ const HeroSearch: React.FC = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="text-center mt-6 text-gray-500 text-sm font-medium flex items-center justify-center gap-2"
+                className="text-center mt-3 text-gray-500 text-sm font-medium flex items-center justify-center gap-2"
             >
                 <Sparkles className="w-4 h-4 text-pink-500" />
                 Try saying: "Show me red dresses for a wedding"
